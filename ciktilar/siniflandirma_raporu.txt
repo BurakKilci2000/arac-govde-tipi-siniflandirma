@@ -1,0 +1,52 @@
+Senaryo: Test setinde 100 gerçek SEDAN var.
+Model ne yaptı:
+
+150 görsel için "SEDAN" dedi
+Bunların 99'u gerçekten sedan
+51'i aslında hatchback veya SUV'du (yanlış)
+1 gerçek sedan'ı kaçırdı (başka sınıf dedi)
+
+Precision sorusu: "SEDAN dediklerimin kaçı gerçekten sedan?"
+99 doğru / 150 toplam tahmin = %66
+
+Recall sorusu: "Gerçek sedanların kaçını bulabildim?"
+99 doğru / 100 gerçek sedan = %99
+Neredeyse tüm sedanları buldu ama çok fazla yanlış da ekledi.
+
+
+F1-Score
+Precision ve Recall'un dengeli ortalaması. İkisi arasında denge kurar.
+Precision = 0.84
+Recall    = 0.87
+F1        = 0.855
+Neden ikisine de bakıyoruz? Çünkü biri iyi diğeri kötü olabilir. Sedan sınıfımızda:
+Precision = 0.68  (sedan dediğimizin %32'si başka sınıftı)
+Recall    = 0.99  (neredeyse tüm sedanları bulduk)
+F1        = 0.81  (denge ortalaması)
+Yani: "Genel performans ne kadar iyi?" — projede birinci öncelikli metrik bu.
+
+
+Support
+O sınıftan test setinde kaç görsel vardı, sadece bilgi amaçlı.
+SUV support = 124   (test setinde 124 SUV görseli vardı)
+MICRO support = 18  (test setinde 18 micro görseli vardı)
+
+
+
+                 precision    recall  f1-score   support
+
+ACIK_TEKERLEKLI     1.0000    1.0000    1.0000        78
+      HATCHBACK     0.9385    0.6289    0.7531        97
+          MICRO     0.9444    0.9444    0.9444        18
+        PICK_UP     0.9574    0.8333    0.8911       108
+          SEDAN     0.6828    0.9900    0.8082       100
+  STATION_WAGON     0.8636    0.6552    0.7451        29
+            SUV     0.8438    0.8710    0.8571       124
+            VAN     0.9541    0.9905    0.9720       105
+
+       accuracy                         0.8741       659
+      macro avg     0.8981    0.8642    0.8714       659
+   weighted avg     0.8916    0.8741    0.8726       659
+
+Makro F1     : 0.8714
+Agirlikli F1 : 0.8726

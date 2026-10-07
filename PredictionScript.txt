@@ -1,0 +1,101 @@
+# Gerekli kütüphanelerin kurulumu
+!pip install torch torchvision Pillow --quiet
+
+import os
+import torch
+import torch.nn as nn
+from PIL import Image
+from torchvision import transforms
+from torchvision.models import efficientnet_b0
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Sinif numarasi donusumu (proje dokumanindaki sira)
+# ---------------------------------------------------------------------------
+MODEL_ETIKET_TO_PROJE_NO = {
+    "SUV":             1,
+    "VAN":             2,
+    "STATION_WAGON":   3,
+    "MICRO":           4,
+    "ACIK_TEKERLEKLI": 5,
+    "SEDAN":           6,
+    "HATCHBACK":       7,
+    "PICK_UP":         8,
+}
+
+# Script ve model ayni klasorde olmali
+SCRIPT_KLASOR = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else '/content/230202111'
+MODEL_YOLU = os.path.join(SCRIPT_KLASOR, "en_iyi_model.pth")
+
+# Desteklenen gorsel uzantilari
+GORSEL_UZANTILARI = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
+
+# Global degiskenler - her cagirda yeniden yuklemekten kacin
+_model = None
+_sinif_isimleri = None
+_donusum = None
+_cihaz = None
+
+
+def _modeli_yukle():
+    global _model, _sinif_isimleri, _donusum, _cihaz
+    if _model is not None:
+        return
+    _cihaz = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Cihaz: {_cihaz}")
+    kontrol_noktasi = torch.load(MODEL_YOLU, map_location=_cihaz, weights_only=False)
+    _sinif_isimleri = kontrol_noktasi["sinif_isimleri"]
+    gorsel_boyutu  = kontrol_noktasi.get("gorsel_boyutu", 224)
+    sinif_sayisi   = len(_sinif_isimleri)
+    _model = efficientnet_b0(weights=None)
+    giris_ozellik_sayisi = _model.classifier[1].in_features
+    _model.classifier = nn.Sequential(
+        nn.Dropout(p=0.3, inplace=True),
+        nn.Linear(giris_ozellik_sayisi, sinif_sayisi),
+    )
+    _model.load_state_dict(kontrol_noktasi["state_dict"])
+    _model.to(_cihaz)
+    _model.eval()
+    _donusum = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(gorsel_boyutu),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225]),
+    ])
+    print("Model yuklendi.")
+
+
+def Predict(file_path):
+    _modeli_yukle()
+    image_names = []
+    preds       = []
+    testdata_klasor = Path(file_path)
+    for gorsel_yolu in sorted(testdata_klasor.rglob("*")):
+        if gorsel_yolu.is_file() and gorsel_yolu.suffix.lower() in GORSEL_UZANTILARI:
+            try:
+                resim = Image.open(gorsel_yolu).convert("RGB")
+                x     = _donusum(resim).unsqueeze(0).to(_cihaz)
+                with torch.no_grad():
+                    logitler    = _model(x)
+                    olasiliklar = torch.softmax(logitler, dim=1)[0]
+                    indeks      = int(olasiliklar.argmax())
+                    etiket      = _sinif_isimleri[indeks]
+                    proje_no    = MODEL_ETIKET_TO_PROJE_NO[etiket]
+                image_names.append(gorsel_yolu.name)
+                preds.append(proje_no)
+            except Exception as hata:
+                print(f"Hata ({gorsel_yolu.name}): {hata}")
+                continue
+
+    # preds.txt - Test.txt ile uyumlu (kucuk harf), script klasorune kaydedilir
+    filename = os.path.join(SCRIPT_KLASOR, "preds.txt")
+    f = open(filename, "w", encoding="utf-8")
+    for i in range(len(preds)):
+        line = (
+            f"{image_names[i]} | Pred: {preds[i]} "
+        )
+        print(line)
+        f.write(line + "\n")
+    f.close()
+    print(f"\nTamamlandi. {len(preds)} tahmin '{filename}' dosyasina yazildi.")

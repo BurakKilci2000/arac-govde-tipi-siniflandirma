@@ -1,0 +1,29 @@
+{
+  "calistirilan_epoch_sayisi": 30,
+  "en_iyi_dogrulama_kaybi": 1.0349386061080779,
+  "test_makro_f1": 0.8713733439494397,
+  "test_agirlikli_f1": 0.8726145147167864,
+  "sinif_isimleri": [
+    "ACIK_TEKERLEKLI",
+    "HATCHBACK",
+    "MICRO",
+    "PICK_UP",
+    "SEDAN",
+    "STATION_WAGON",
+    "SUV",
+    "VAN"
+  ],
+  "parametreler": {
+    "veri_klasor": "veri",
+    "cikti_klasor": "ciktilar",
+    "epoch": 30,
+    "batch_boyut": 16,
+    "ogrenme_orani": 0.001,
+    "ogrenme_orani_omurga": 0.0001,
+    "agirlik_zayiflama": 0.0001,
+    "dropout": 0.3,
+    "sabir": 7,
+    "isci_sayisi": 0,
+    "tohum": 42
+  }
+}
