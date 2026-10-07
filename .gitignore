@@ -1,0 +1,20 @@
+# Sanal ortam
+venv/
+.venv/
+
+# Veri setleri (GitHub'a yuklenmez, kaynaklar README'de)
+ham_veri/
+veri/
+testdata/
+
+# Python onbellegi
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+
+# Gecici tahmin ciktilari
+preds*.txt
+*.zip
